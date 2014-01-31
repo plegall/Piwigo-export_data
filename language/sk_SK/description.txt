@@ -1,0 +1,1 @@
+Výpis dát z databázy do tabuľky
