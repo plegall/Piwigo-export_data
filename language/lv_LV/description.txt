@@ -1,0 +1,1 @@
+Ekstaktēt datus no datu bāzes un ievietot izklājlapā
