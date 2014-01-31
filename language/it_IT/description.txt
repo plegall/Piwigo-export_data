@@ -1,0 +1,1 @@
+Estrarre dati da database in un foglio di calcolo
