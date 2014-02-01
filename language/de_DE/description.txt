@@ -1,0 +1,1 @@
+Extrahiert Daten aus der Datenbank in eine Tabelle
