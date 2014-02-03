@@ -1,0 +1,1 @@
+Udtrækker data fra database til et regneark
