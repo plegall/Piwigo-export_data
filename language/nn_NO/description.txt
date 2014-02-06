@@ -1,0 +1,1 @@
+Hent ut data frå databasen til eit rekneark
