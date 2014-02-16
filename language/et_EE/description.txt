@@ -1,0 +1,1 @@
+Väljasta andmebaasist andmeid arveldustabeli kujul
