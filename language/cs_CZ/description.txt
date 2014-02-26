@@ -1,0 +1,1 @@
+Exportuje data z databáze do souboru
