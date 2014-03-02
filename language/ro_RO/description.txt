@@ -1,0 +1,1 @@
+Extrage informația din baza de date într-un tabel
