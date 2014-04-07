@@ -31,7 +31,7 @@ $tabsheet->assign();
 // | Actions                                                               |
 // +-----------------------------------------------------------------------+
 
-if (isset($_GET['type']) and 'albums' == $_GET['type'])
+if (isset($_GET['type']))
 {
   // output headers so that the file is downloaded rather than displayed
   header('Content-Type: text/csv; charset=utf-8');
@@ -39,8 +39,10 @@ if (isset($_GET['type']) and 'albums' == $_GET['type'])
   
   // create a file pointer connected to the output stream
   $output = fopen('php://output', 'w');
-  
-  $query = '
+
+  if ('albums' == $_GET['type'])
+  {
+    $query = '
 SELECT
     id,
     name,
@@ -48,13 +50,54 @@ SELECT
   FROM '.CATEGORIES_TABLE.'
   ORDER BY id ASC
 ;';
-  $result = pwg_query($query);
+    $result = pwg_query($query);
 
-  set_make_full_url();
-  while ($row = pwg_db_fetch_assoc($result))
-  {
-    fputcsv($output, array('url' => make_index_url(array('category' => $row))));
+    set_make_full_url();
+    while ($row = pwg_db_fetch_assoc($result))
+    {
+      fputcsv($output, array('url' => make_index_url(array('category' => $row))));
+    }
   }
+
+  if ('photos' == $_GET['type'])
+  {
+    $query = '
+SELECT
+    i.id,
+    file,
+    date_available,
+    date_creation,
+    i.name AS title,
+    author,
+    hit,
+    filesize,
+    width,
+    height,
+    latitude,
+    longitude,
+    group_concat(t.name) AS tags,
+    comment AS description
+  FROM '.IMAGES_TABLE.' AS i
+    LEFT JOIN '.IMAGE_TAG_TABLE.' ON image_id=i.id
+    LEFT JOIN '.TAGS_TABLE.' AS t ON tag_id=t.id
+  GROUP BY i.id
+  ORDER BY i.id
+;';
+    $result = pwg_query($query);
+
+    $is_first = true;
+    while ($row = pwg_db_fetch_assoc($result))
+    {
+      if ($is_first)
+      {
+        fputcsv($output, array_keys($row));
+        $is_first = false;
+      }
+      
+      fputcsv($output, $row);
+    }
+  }
+  
   exit();
 }
 
