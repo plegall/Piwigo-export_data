@@ -39,7 +39,7 @@ if (isset($_GET['type']))
   
   // create a file pointer connected to the output stream
   $output = fopen('php://output', 'w');
-
+  fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
   if ('albums' == $_GET['type'])
   {
     $query = '
