@@ -20,6 +20,6 @@
 // | Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, |
 // | USA.                                                                  |
 // +-----------------------------------------------------------------------+
-$lang['Export Data'] = 'Verileri Dışa Aktar';
-$lang['Export albums'] = 'Albümleri Dışa Aktar';
-?>
+$lang['Export Data'] = 'Verileri dışa aktar';
+$lang['Export albums'] = 'Albümleri dışa aktar';
+$lang['Export photos'] = 'Fotoğrafları dışa aktar';
