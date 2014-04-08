@@ -22,4 +22,4 @@
 // +-----------------------------------------------------------------------+
 $lang['Export albums'] = 'Eksportēt albūmu';
 $lang['Export Data'] = 'Datu Eksports';
-?>
+$lang['Export photos'] = 'Eksportēt fotogrāfijas';
