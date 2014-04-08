@@ -22,4 +22,4 @@
 // +-----------------------------------------------------------------------+
 $lang['Export albums'] = 'Exportovať albumy';
 $lang['Export Data'] = 'Exportovať dáta';
-?>
+$lang['Export photos'] = 'Exportovať fotky';
