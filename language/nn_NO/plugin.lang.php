@@ -22,4 +22,4 @@
 // +-----------------------------------------------------------------------+
 $lang['Export Data'] = 'Eksporter data';
 $lang['Export albums'] = 'Eksporter album';
-?>
+$lang['Export photos'] = 'Eksporter bilete';
