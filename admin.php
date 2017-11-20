@@ -97,6 +97,39 @@ SELECT
       fputcsv($output, $row);
     }
   }
+
+  if ('comments' == $_GET['type'])
+  {
+    $query = '
+SELECT
+    id,
+    image_id,
+    date,
+    author,
+    email,
+    author_id,
+    anonymous_id,
+    website_url,
+    validated,
+    validation_date,
+    content
+  FROM '.COMMENTS_TABLE.'
+  ORDER BY id
+;';
+    $result = pwg_query($query);
+
+    $is_first = true;
+    while ($row = pwg_db_fetch_assoc($result))
+    {
+      if ($is_first)
+      {
+        fputcsv($output, array_keys($row));
+        $is_first = false;
+      }
+
+      fputcsv($output, $row);
+    }
+  }
   
   exit();
 }

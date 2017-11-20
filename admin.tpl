@@ -10,3 +10,4 @@ fieldset p {text-align:left;margin:0;}
 
 <a href="{$EXPORT_DATA_ADMIN}&amp;type=albums">{'Export albums'|@translate}</a>
 | <a href="{$EXPORT_DATA_ADMIN}&amp;type=photos">{'Export photos'|@translate}</a>
+| <a href="{$EXPORT_DATA_ADMIN}&amp;type=comments">{'Export comments'|@translate}</a>
