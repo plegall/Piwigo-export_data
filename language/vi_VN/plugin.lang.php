@@ -23,3 +23,4 @@
 $lang['Export Data'] = 'Xuất dữ liệu';
 $lang['Export albums'] = 'Xuất tập ảnh';
 $lang['Export photos'] = 'Xuất hình ảnh';
+$lang['Export comments'] = 'Xuất các bình luận';
