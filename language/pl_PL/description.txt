@@ -1,1 +1,1 @@
-Ekstrahuje dane z bazy danych do arkusza kalkulacyjnego
+Eksportuje dane z bazy danych do arkusza kalkulacyjnego
