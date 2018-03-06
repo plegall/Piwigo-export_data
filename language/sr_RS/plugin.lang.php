@@ -23,3 +23,4 @@
 $lang['Export Data'] = 'Извези податке';
 $lang['Export albums'] = 'Извези албуме';
 $lang['Export photos'] = 'Извези фотографије';
+$lang['Export comments'] = 'Извези коментаре';
