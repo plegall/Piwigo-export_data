@@ -22,4 +22,5 @@
 // +-----------------------------------------------------------------------+
 $lang['Export Data'] = '导出数据';
 $lang['Export albums'] = '导出相册';
-$lang['Export photos'] = '导出相片';
+$lang['Export photos'] = '导出图片';
+$lang['Export comments'] = '导出评论';
