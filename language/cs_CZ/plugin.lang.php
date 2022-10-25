@@ -1,4 +1,5 @@
 <?php
-$lang['Export Data'] = 'Export Dat';
-$lang['Export albums'] = 'Export fotoalb';
+$lang['Export Data'] = 'Exportovat data';
+$lang['Export albums'] = 'Exportovat alba';
 $lang['Export photos'] = 'Exportovat fotografie';
+$lang['Export comments'] = 'Exportovat komentáře';
