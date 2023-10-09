@@ -4,6 +4,8 @@ if (!defined("PHPWG_ROOT_PATH"))
   die ("Hacking attempt!");
 }
 
+check_input_parameter('type', $_GET, false, '/^(albums|comments|downloads|photos|users)$/');
+
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
@@ -35,7 +37,7 @@ if (isset($_GET['type']))
 {
   // output headers so that the file is downloaded rather than displayed
   header('Content-Type: text/csv; charset=utf-8');
-  header('Content-Disposition: attachment; filename=piwigo-albums.csv');
+  header('Content-Disposition: attachment; filename=piwigo-'.$_GET['type'].'.csv');
   
   // create a file pointer connected to the output stream
   $output = fopen('php://output', 'w');
@@ -56,6 +58,64 @@ SELECT
     while ($row = pwg_db_fetch_assoc($result))
     {
       fputcsv($output, array('url' => make_index_url(array('category' => $row))));
+    }
+  }
+
+  if ('users' == $_GET['type'])
+  {
+    $query = '
+SELECT
+    u.'.$conf['user_fields']['id'].' AS id,
+    u.'.$conf['user_fields']['username'].' AS username,
+    u.'.$conf['user_fields']['email'].' AS email,
+    ui.status,
+    ui.language,
+    ui.registration_date,
+    ui.level,
+    ui.enabled_high,
+    ui.last_visit
+  FROM '.USERS_TABLE.' AS u
+    JOIN '.USER_INFOS_TABLE.' AS ui ON ui.user_id = u.'.$conf['user_fields']['id'].'
+  WHERE ui.user_id != '.$conf['guest_id'].'
+  ORDER BY id ASC
+;';
+    $user_infos_of = query2array($query, 'id');
+
+    $query = '
+SELECT
+    id,
+    name
+  FROM '.GROUPS_TABLE.'
+;';
+    $name_of_group = query2array($query, 'id', 'name');
+
+    $groups_of_user = array();
+    $query = '
+SELECT
+    user_id,
+    group_id
+  FROM '.USER_GROUP_TABLE.'
+;';
+    $user_group = query2array($query);
+    foreach ($user_group as $row)
+    {
+      @$groups_of_user[ $row['user_id'] ][] = $name_of_group[ $row['group_id'] ];
+    }
+
+    $is_first = true;
+
+    foreach ($user_infos_of as $row)
+    {
+      $row['groups'] = implode(' + ', $groups_of_user[ $row['id'] ] ?? array());
+      $row['level'] = ($row['level'] > 0 ? l10n('Level '.$row['level']) : '');
+
+      if ($is_first)
+      {
+        fputcsv($output, array_keys($row));
+        $is_first = false;
+      }
+
+      fputcsv($output, $row);
     }
   }
 
