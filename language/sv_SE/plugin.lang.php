@@ -24,3 +24,5 @@ $lang['Export Data'] = 'Exportera data';
 $lang['Export albums'] = 'Exportera album';
 $lang['Export photos'] = 'Exportera foton';
 $lang['Export comments'] = 'Exportera kommentarer';
+$lang['Export downloads'] = 'Exportera nedladdningar';
+$lang['Export users'] = 'Exportera användare';
