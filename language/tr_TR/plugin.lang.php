@@ -24,3 +24,5 @@ $lang['Export Data'] = 'Verileri dışa aktar';
 $lang['Export albums'] = 'Albümleri dışa aktar';
 $lang['Export photos'] = 'Fotoğrafları dışa aktar';
 $lang['Export comments'] = 'Yorumları dışa aktar';
+$lang['Export downloads'] = 'İndirmeleri dışa aktar';
+$lang['Export users'] = 'Kullanıcıları dışa aktar';
