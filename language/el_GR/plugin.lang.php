@@ -24,3 +24,5 @@ $lang['Export albums'] = 'Εξαγωγή Λευκωμάτων';
 $lang['Export Data'] = 'Εξαγωγή δεδομένων';
 $lang['Export photos'] = 'Εξαγωγή φωτογραφιών';
 $lang['Export comments'] = 'Εξαγωγή σχολίων ';
+$lang['Export downloads'] = 'Εξαγωγή λήψεων';
+$lang['Export users'] = 'Export users';
