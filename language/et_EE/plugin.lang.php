@@ -24,3 +24,5 @@ $lang['Export Data'] = 'Ekspordi andmed';
 $lang['Export albums'] = 'Ekspordi albumid';
 $lang['Export photos'] = 'Ekspordi pildid';
 $lang['Export comments'] = 'Ekspordi kommentaarid';
+$lang['Export downloads'] = 'Ekspordi allalaaditavad failid';
+$lang['Export users'] = 'Ekspordi kasutajaid';
