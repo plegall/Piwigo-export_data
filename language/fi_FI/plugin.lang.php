@@ -24,3 +24,5 @@ $lang['Export Data'] = 'Vie data';
 $lang['Export albums'] = 'Vie albumit';
 $lang['Export photos'] = 'Vie kuvat';
 $lang['Export comments'] = 'Vie kommentit';
+$lang['Export downloads'] = 'Vie lataukset';
+$lang['Export users'] = 'Vie käyttäjät';
