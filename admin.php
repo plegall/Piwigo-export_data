@@ -5,6 +5,7 @@ if (!defined("PHPWG_ROOT_PATH"))
 }
 
 check_input_parameter('type', $_GET, false, '/^(albums|comments|downloads|photos|users)$/');
+check_input_parameter('format', $_GET, false, '/^(csv|json)$/');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -35,13 +36,23 @@ $tabsheet->assign();
 
 if (isset($_GET['type']))
 {
-  // output headers so that the file is downloaded rather than displayed
-  header('Content-Type: text/csv; charset=utf-8');
-  header('Content-Disposition: attachment; filename=piwigo-'.$_GET['type'].'.csv');
+  if ('json' == $_GET['format'])
+  {
+    header('Content-Type: application/json; charset=utf-8');
+    header('Content-Disposition: attachment; filename=piwigo-'.$_GET['type'].'.json');
+    $data = [];
+  }
+  else
+  {
+    // output headers so that the file is downloaded rather than displayed
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename=piwigo-'.$_GET['type'].'.csv');
   
-  // create a file pointer connected to the output stream
-  $output = fopen('php://output', 'w');
-  fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+    // create a file pointer connected to the output stream
+    $output = fopen('php://output', 'w');
+    fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+  }
+
   if ('albums' == $_GET['type'])
   {
     $query = '
@@ -57,7 +68,16 @@ SELECT
     set_make_full_url();
     while ($row = pwg_db_fetch_assoc($result))
     {
-      fputcsv($output, array('url' => make_index_url(array('category' => $row))));
+      $line = ['url' => make_index_url(array('category' => $row))];
+
+      if ('json' == $_GET['format'])
+      {
+        $data[] = $line;
+      }
+      else
+      {
+        fputcsv($output, $line);
+      }
     }
   }
 
@@ -106,16 +126,25 @@ SELECT
 
     foreach ($user_infos_of as $row)
     {
-      $row['groups'] = implode(' + ', $groups_of_user[ $row['id'] ] ?? array());
+      $row['groups'] = $groups_of_user[ $row['id'] ] ?? array();
       $row['level'] = ($row['level'] > 0 ? l10n('Level '.$row['level']) : '');
 
-      if ($is_first)
+      if ('json' == $_GET['format'])
       {
-        fputcsv($output, array_keys($row));
-        $is_first = false;
+        $data[] = $row;
       }
+      else
+      {
+        if ($is_first)
+        {
+          fputcsv($output, array_keys($row));
+          $is_first = false;
+        }
 
-      fputcsv($output, $row);
+        $row['groups'] = implode(' + ', $row['groups']);
+
+        fputcsv($output, $row);
+      }
     }
   }
 
@@ -123,11 +152,32 @@ SELECT
   {
     $query = '
 SELECT
-    i.id,
+    id,
+    name
+  FROM '.TAGS_TABLE.'
+;';
+    $name_of_tag = query2array($query, 'id', 'name');
+
+    $tags_of_image = [];
+    $query = '
+SELECT
+    tag_id,
+    image_id
+  FROM '.IMAGE_TAG_TABLE.'
+;';
+    $rows = query2array($query);
+    foreach ($rows as $row)
+    {
+      @$tags_of_image[ $row['image_id'] ][] = $name_of_tag[ $row['tag_id'] ];
+    }
+
+    $query = '
+SELECT
+    id,
     file,
     date_available,
     date_creation,
-    i.name AS title,
+    name AS title,
     author,
     hit,
     filesize,
@@ -135,26 +185,33 @@ SELECT
     height,
     latitude,
     longitude,
-    group_concat(t.name) AS tags,
     comment AS description
-  FROM '.IMAGES_TABLE.' AS i
-    LEFT JOIN '.IMAGE_TAG_TABLE.' ON image_id=i.id
-    LEFT JOIN '.TAGS_TABLE.' AS t ON tag_id=t.id
-  GROUP BY i.id
-  ORDER BY i.id
+  FROM '.IMAGES_TABLE.'
+  ORDER BY id
 ;';
     $result = pwg_query($query);
 
     $is_first = true;
     while ($row = pwg_db_fetch_assoc($result))
     {
-      if ($is_first)
+      $row['tags'] = $tags_of_image[ $row['id'] ] ?? array();
+
+      if ('json' == $_GET['format'])
       {
-        fputcsv($output, array_keys($row));
-        $is_first = false;
+        $data[] = $row;
       }
-      
-      fputcsv($output, $row);
+      else
+      {
+        if ($is_first)
+        {
+          fputcsv($output, array_keys($row));
+          $is_first = false;
+        }
+
+        $row['tags'] = implode(', ', $row['tags']);
+
+        fputcsv($output, $row);
+      }
     }
   }
 
@@ -181,13 +238,20 @@ SELECT
     $is_first = true;
     while ($row = pwg_db_fetch_assoc($result))
     {
-      if ($is_first)
+      if ('json' == $_GET['format'])
       {
-        fputcsv($output, array_keys($row));
-        $is_first = false;
+        $data[] = $row;
       }
+      else
+      {
+        if ($is_first)
+        {
+          fputcsv($output, array_keys($row));
+          $is_first = false;
+        }
 
-      fputcsv($output, $row);
+        fputcsv($output, $row);
+      }
     }
   }
 
@@ -309,61 +373,77 @@ SELECT
 ;';
     $user_infos_of = query2array($query, 'id');
 
+    $column_titles = array(
+      '#history',
+      'datetime',
+      'user id',
+      'user name',
+      'user email',
+      'user IP',
+      'photo id',
+      'photo filename',
+      'photo title',
+    );
+
+    if ($cat_max_level > 0)
+    {
+      for ($i = 1; $i <= $cat_max_level; $i++)
+      {
+        $column_titles[] = 'album level '.$i;
+      }
+    }
+
     $is_first = true;
     foreach ($history_lines as $history_line)
     {
-      if ($is_first)
+      if ('csv' == $_GET['format'] and $is_first)
       {
-        $row = array(
-          '#history',
-          'datetime',
-          'user id',
-          'user name',
-          'user email',
-          'user IP',
-          'photo id',
-          'photo filename',
-          'photo title',
-        );
-
-        if ($cat_max_level > 0)
-        {
-          for ($i = 1; $i <= $cat_max_level; $i++)
-          {
-            $row[] = 'album level '.$i;
-          }
-        }
-
-        fputcsv($output, $row);
-        // echo '<pre>'; print_r($row); echo '</pre>';
+        fputcsv($output, $column_titles);
         $is_first = false;
       }
       
       $row = array(
-        $history_line['id'],
-        $history_line['date'].' '.$history_line['time'],
-        $history_line['user_id'],
-        isset($user_infos_of[ $history_line['user_id'] ]) ? $user_infos_of[ $history_line['user_id'] ]['username'] : 'user no longer exists',
-        isset($user_infos_of[ $history_line['user_id'] ]) ? $user_infos_of[ $history_line['user_id'] ]['email'] : '',
-        $history_line['IP'],
-        $history_line['image_id'],
-        isset($image_infos_of[ $history_line['image_id'] ]) ? $image_infos_of[ $history_line['image_id'] ]['file'] : 'file no longer exists',
-        isset($image_infos_of[ $history_line['image_id'] ]) ? $image_infos_of[ $history_line['image_id'] ]['name'] : '',
+        $column_titles[0] => $history_line['id'],
+        $column_titles[1] => $history_line['date'].' '.$history_line['time'],
+        $column_titles[2] => $history_line['user_id'],
+        $column_titles[3] => isset($user_infos_of[ $history_line['user_id'] ]) ? $user_infos_of[ $history_line['user_id'] ]['username'] : 'user no longer exists',
+        $column_titles[4] => isset($user_infos_of[ $history_line['user_id'] ]) ? $user_infos_of[ $history_line['user_id'] ]['email'] : '',
+        $column_titles[5] => $history_line['IP'],
+        $column_titles[6] => $history_line['image_id'],
+        $column_titles[7] => isset($image_infos_of[ $history_line['image_id'] ]) ? $image_infos_of[ $history_line['image_id'] ]['file'] : 'file no longer exists',
+        $column_titles[8] => isset($image_infos_of[ $history_line['image_id'] ]) ? $image_infos_of[ $history_line['image_id'] ]['name'] : '',
       );
 
       if (isset($category_id_of_image[ $history_line['image_id'] ]))
       {
-        $row = array_merge(
-          $row,
-          $category_path_of[ $category_id_of_image[ $history_line['image_id'] ] ]
-        );
+        if ('json' == $_GET['format'])
+        {
+          $row['album_path'] = $category_path_of[ $category_id_of_image[ $history_line['image_id'] ] ];
+        }
+        else
+        {
+          $row = array_merge(
+            $row,
+            $category_path_of[ $category_id_of_image[ $history_line['image_id'] ] ]
+          );
+        }
       }
 
-      fputcsv($output, $row);
-      // echo '<pre>'; print_r($row); echo '</pre>';
+      if ('json' == $_GET['format'])
+      {
+        $data[] = $row;
+      }
+      else
+      {
+        fputcsv($output, $row);
+      }
     }
   }
 
+  if ('json' == $_GET['format'])
+  {
+    echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+  }
   exit();
 }
 
@@ -375,7 +455,12 @@ SELECT
 $template->set_filename('export_data_content', realpath(EXPORT_DATA_PATH . 'admin.tpl'));
 
 // template vars
-$template->assign('EXPORT_DATA_ADMIN', EXPORT_DATA_ADMIN);
+$template->assign(
+  array(
+    'EXPORT_DATA_ADMIN' => EXPORT_DATA_ADMIN,
+    'ADMIN_PAGE_TITLE' => 'Export Data',
+  )
+);
 
 // +-----------------------------------------------------------------------+
 // | sending html code                                                     |
