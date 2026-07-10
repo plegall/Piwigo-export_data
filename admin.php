@@ -55,28 +55,64 @@ if (isset($_GET['type']))
 
   if ('albums' == $_GET['type'])
   {
+    $output_cats = [];
+
     $query = '
 SELECT
     id,
     name,
-    permalink
+    permalink,
+    uppercats,
+    id_uppercat,
+    global_rank
   FROM '.CATEGORIES_TABLE.'
-  ORDER BY id ASC
 ;';
-    $result = pwg_query($query);
+    $categories = query2array($query);
+
+    $name_of_category = [];
+    foreach ($categories as $category)
+    {
+      $name_of_category[ $category['id'] ] = $category['name'];
+    }
+    usort($categories, 'global_rank_compare');
 
     set_make_full_url();
-    while ($row = pwg_db_fetch_assoc($result))
+    $is_first = true;
+
+    foreach ($categories as $category)
     {
-      $line = ['url' => make_index_url(array('category' => $row))];
+      $cat = array(
+        'id' => $category['id'],
+        'parent_id' => $category['id_uppercat'],
+        'uppercat_ids' => $category['uppercats'],
+        'name' => $category['name'],
+        'path' => str_replace("\n", '', strip_tags(get_cat_display_name_cache($category['uppercats'])),
+        ),
+        'url' => make_index_url(array('category' => $category)),
+      );
 
       if ('json' == $_GET['format'])
       {
-        $data[] = $line;
+        $cat['uppercat_ids'] = explode(',', $cat['uppercat_ids']);
+
+        $cat['uppercats'] = [];
+
+        foreach ($cat['uppercat_ids'] as $cat_id)
+        {
+          $cat['uppercats'][] = $name_of_category[$cat_id];
+        }
+
+        $data[] = $cat;
       }
       else
       {
-        fputcsv($output, $line);
+        if ($is_first)
+        {
+          fputcsv($output, array_keys($cat));
+          $is_first = false;
+        }
+
+        fputcsv($output, $cat);
       }
     }
   }
@@ -171,6 +207,19 @@ SELECT
       @$tags_of_image[ $row['image_id'] ][] = $name_of_tag[ $row['tag_id'] ];
     }
 
+    $category_ids_for_image = [];
+    $query = '
+SELECT
+    image_id,
+    category_id
+  FROM '.IMAGE_CATEGORY_TABLE.'
+;';
+    $result = pwg_query($query);
+    while ($row = pwg_db_fetch_assoc($result))
+    {
+      @$category_ids_for_image[ $row['image_id'] ][] = $row['category_id'];
+    }
+
     $query = '
 SELECT
     id,
@@ -195,6 +244,7 @@ SELECT
     while ($row = pwg_db_fetch_assoc($result))
     {
       $row['tags'] = $tags_of_image[ $row['id'] ] ?? array();
+      $row['album_ids'] = $category_ids_for_image[ $row['id'] ] ?? array();
 
       if ('json' == $_GET['format'])
       {
@@ -209,6 +259,7 @@ SELECT
         }
 
         $row['tags'] = implode(', ', $row['tags']);
+        $row['album_ids'] = implode(',', $row['album_ids']);
 
         fputcsv($output, $row);
       }
